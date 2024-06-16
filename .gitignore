@@ -1,32 +1,20 @@
+.fable/
 *.fs.js
-deploy/
-temp/
-.idea
-.ionide
-
-# Logs
-logs
-*.log
-npm-debug.log*
-
-# Runtime data
-pids
-*.pid
-*.seed
-
-# Packages
-node_modules
-jspm_packages
-
-# Binaries
-bin
-obj
-
-# Output
-build
-
+*.fs.js.map
 .fake/
-paket-files/
+.farmer/
+.idea/
+.ionide/
+.vs/
+deploy/
+obj/
+bin/
+output/
 packages/
-
-*.DS_Store
+paket-files/
+node_modules/
+release.cmd
+release.sh
+*.orig
+*.fsproj.user
+*.DotSettings.user
