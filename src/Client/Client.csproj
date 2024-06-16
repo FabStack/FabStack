@@ -11,7 +11,6 @@
         <None Include="paket.references" />
         <Compile Include="Libs/Monaco.fs" />
         <Compile Include="ReactEditor.fs" />
-        <Compile Include="Molstar.fs" />
         <Compile Include="Index.fs" />
         <Compile Include="App.fs" />
         <None Include="vite.config.mts" />

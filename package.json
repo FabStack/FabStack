@@ -6,8 +6,12 @@
     },
     "scripts": {},
     "dependencies": {
+        "molstar": "^4.3.0",
+        "prop-types": "^15.8.1",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "react-monaco-editor": "^0.55.0",
+        "react-resize-detector": "^11.0.1"
     },
     "devDependencies": {
         "@types/node": "^20.9.1",

@@ -1,8 +1,26 @@
 module Index
 
-open Elmish
 open Fable.Remoting.Client
 open Shared
+
+open Fable.Core
+open Fable.Core.JsInterop
+// open Fable.FontAwesome
+open Browser.Types
+open Browser
+// open Fetch.Types
+open Elmish
+// open Thoth.Elmish
+// open Prelude
+// open Editor
+// open Mouse
+open Thoth.Json
+// open Fable.WebWorker
+
+open Feliz
+// open Feliz.Bulma
+open Feliz.ReactEditor
+open Feliz.Molstar
 
 type Model = { Todos: Todo list; Input: string }
 
@@ -82,30 +100,66 @@ let private todoList model dispatch =
         ]
     ]
 
+// let view model dispatch =
+//     Html.section [
+//         prop.className "h-screen w-screen"
+//         prop.style [
+//             style.backgroundSize "cover"
+//             style.backgroundImageUrl "https://unsplash.it/1200/900?random"
+//             style.backgroundPosition "no-repeat center center fixed"
+//         ]
+
+//         prop.children [
+//             Html.a [
+//                 prop.href "https://safe-stack.github.io/"
+//                 prop.className "absolute block ml-12 h-12 w-12 bg-teal-300 hover:cursor-pointer hover:bg-teal-400"
+//                 prop.children [ Html.img [ prop.src "/favicon.svg"; prop.alt "Logo" ] ]
+//             ]
+
+//             Html.div [
+//                 prop.className "flex flex-col items-center justify-center h-full"
+//                 prop.children [
+//                     Html.h1 [
+//                         prop.className "text-center text-5xl font-bold text-white mb-3 rounded-md p-4"
+//                         prop.text "FabStack"
+//                     ]
+//                     todoList model dispatch
+//                 ]
+//             ]
+//         ]
+//     ]
+
 let view model dispatch =
+
+    let options = jsOptions<Monaco.Editor.IEditorConstructionOptions>(fun (o: Monaco.Editor.IEditorConstructionOptions) ->
+            o.minimap <- Some (jsOptions(fun oMinimap -> oMinimap.enabled <- Some false))
+            o.theme <- Some "vs-dark"
+        )
+
     Html.section [
         prop.className "h-screen w-screen"
-        prop.style [
-            style.backgroundSize "cover"
-            style.backgroundImageUrl "https://unsplash.it/1200/900?random"
-            style.backgroundPosition "no-repeat center center fixed"
-        ]
-
         prop.children [
-            Html.a [
-                prop.href "https://safe-stack.github.io/"
-                prop.className "absolute block ml-12 h-12 w-12 bg-teal-300 hover:cursor-pointer hover:bg-teal-400"
-                prop.children [ Html.img [ prop.src "/favicon.png"; prop.alt "Logo" ] ]
-            ]
-
             Html.div [
-                prop.className "flex flex-col items-center justify-center h-full"
+                prop.className "flex-1"
+                prop.style [
+                    // style.width 200
+                    style.height 400
+                ]
                 prop.children [
-                    Html.h1 [
-                        prop.className "text-center text-5xl font-bold text-white mb-3 rounded-md p-4"
-                        prop.text "FabStack"
+                    ReactEditor.editor [
+                        editor.options options
+                        editor.value "You can type here, but it won't do anything.\nBelow you can see a 3D model of 1LOL."
                     ]
-                    todoList model dispatch
+                ]
+            ]
+            Html.div [
+                prop.className "flex-1"
+                prop.style [
+                    // style.width 200
+                    style.height 400
+                ]
+                prop.children [
+                    Molstar.molstar [ molstar.pdbId "1LOL" ]
                 ]
             ]
         ]
