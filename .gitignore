@@ -1,0 +1,32 @@
+*.fs.js
+deploy/
+temp/
+.idea
+.ionide
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Packages
+node_modules
+jspm_packages
+
+# Binaries
+bin
+obj
+
+# Output
+build
+
+.fake/
+paket-files/
+packages/
+
+*.DS_Store
