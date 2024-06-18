@@ -17,6 +17,7 @@
         <None Include="vite.config.mts" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="Fable.Fetch" Version="2.7.0" />
         <ProjectReference Include="..\Shared\Shared.fsproj" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />

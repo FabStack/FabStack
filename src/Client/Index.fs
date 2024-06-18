@@ -5,30 +5,43 @@ open Shared
 
 open Fable.Core
 open Fable.Core.JsInterop
-// open Fable.FontAwesome
 open Browser.Types
 open Browser
-// open Fetch.Types
 open Elmish
-// open Thoth.Elmish
-// open Prelude
-// open Editor
-// open Mouse
 open Thoth.Json
-// open Fable.WebWorker
 
 open Feliz
-// open Feliz.Bulma
 open Feliz.ReactEditor
 open Feliz.Molstar
 
-type Model = { Todos: Todo list; Input: string }
+open Fetch
+
+let fetchContent pdbId =
+    async {
+        let! response = fetch (sprintf "https://files.rcsb.org/download/%s.cif" pdbId) [] |> Async.AwaitPromise
+        let! item = response.text() |> Async.AwaitPromise
+        return item
+    }
+
+type Model = 
+    { 
+        Todos: Todo list
+        Input: string 
+        PdbIdInput: string
+        EditorValue: string
+        RawPdbText: string
+    }
 
 type Msg =
     | GotTodos of Todo list
     | SetInput of string
     | AddTodo
     | AddedTodo of Todo
+    | ChangeEditorValue of string
+    | ChangePdbIdInput of string
+    | SetPdbId
+    | FetchedContent of string
+    | SetRawPdbText of string
 
 let todosApi =
     Remoting.createApi ()
@@ -36,7 +49,14 @@ let todosApi =
     |> Remoting.buildProxy<ITodosApi>
 
 let init () =
-    let model = { Todos = []; Input = "" }
+    let model = 
+        { 
+            Todos = [] 
+            Input = ""
+            EditorValue = "" 
+            PdbIdInput = "1LOL"
+            RawPdbText = ""
+        }
     let cmd = Cmd.OfAsync.perform todosApi.getTodos () GotTodos
     model, cmd
 
@@ -46,88 +66,17 @@ let update msg model =
     | SetInput value -> { model with Input = value }, Cmd.none
     | AddTodo ->
         let todo = Todo.create model.Input
-
         let cmd = Cmd.OfAsync.perform todosApi.addTodo todo AddedTodo
-
         { model with Input = "" }, cmd
     | AddedTodo todo ->
-        {
-            model with
-                Todos = model.Todos @ [ todo ]
-        },
-        Cmd.none
-
-open Feliz
-
-let private todoAction model dispatch =
-    Html.div [
-        prop.className "flex flex-col sm:flex-row mt-4 gap-4"
-        prop.children [
-            Html.input [
-                prop.className
-                    "shadow appearance-none border rounded w-full py-2 px-3 outline-none focus:ring-2 ring-teal-300 text-grey-darker"
-                prop.value model.Input
-                prop.placeholder "What needs to be done?"
-                prop.autoFocus true
-                prop.onChange (SetInput >> dispatch)
-                prop.onKeyPress (fun ev ->
-                    if ev.key = "Enter" then
-                        dispatch AddTodo)
-            ]
-            Html.button [
-                prop.className
-                    "flex-no-shrink p-2 px-12 rounded bg-teal-600 outline-none focus:ring-2 ring-teal-300 font-bold text-white hover:bg-teal disabled:opacity-30 disabled:cursor-not-allowed"
-                prop.disabled (Todo.isValid model.Input |> not)
-                prop.onClick (fun _ -> dispatch AddTodo)
-                prop.text "Add"
-            ]
-        ]
-    ]
-
-let private todoList model dispatch =
-    Html.div [
-        prop.className "bg-white/80 rounded-md shadow-md p-4 w-5/6 lg:w-3/4 lg:max-w-2xl"
-        prop.children [
-            Html.ol [
-                prop.className "list-decimal ml-6"
-                prop.children [
-                    for todo in model.Todos do
-                        Html.li [ prop.className "my-1"; prop.text todo.Description ]
-                ]
-            ]
-
-            todoAction model dispatch
-        ]
-    ]
-
-// let view model dispatch =
-//     Html.section [
-//         prop.className "h-screen w-screen"
-//         prop.style [
-//             style.backgroundSize "cover"
-//             style.backgroundImageUrl "https://unsplash.it/1200/900?random"
-//             style.backgroundPosition "no-repeat center center fixed"
-//         ]
-
-//         prop.children [
-//             Html.a [
-//                 prop.href "https://safe-stack.github.io/"
-//                 prop.className "absolute block ml-12 h-12 w-12 bg-teal-300 hover:cursor-pointer hover:bg-teal-400"
-//                 prop.children [ Html.img [ prop.src "/favicon.svg"; prop.alt "Logo" ] ]
-//             ]
-
-//             Html.div [
-//                 prop.className "flex flex-col items-center justify-center h-full"
-//                 prop.children [
-//                     Html.h1 [
-//                         prop.className "text-center text-5xl font-bold text-white mb-3 rounded-md p-4"
-//                         prop.text "FabStack"
-//                     ]
-//                     todoList model dispatch
-//                 ]
-//             ]
-//         ]
-//     ]
+        { model with Todos = model.Todos @ [ todo ] }, Cmd.none
+    | ChangeEditorValue s -> { model with EditorValue = s }, Cmd.none
+    | ChangePdbIdInput s -> { model with PdbIdInput = s }, Cmd.none
+    | FetchedContent s -> { model with EditorValue = s }, Cmd.none
+    | SetPdbId -> 
+        let cmd = Cmd.OfAsync.perform fetchContent model.PdbIdInput FetchedContent
+        model, cmd
+    | SetRawPdbText s -> { model with RawPdbText = s }, Cmd.none
 
 let view model dispatch =
 
@@ -137,29 +86,52 @@ let view model dispatch =
         )
 
     Html.section [
-        prop.className "h-screen w-screen"
+        prop.className "flex flex-col h-screen"
         prop.children [
             Html.div [
-                prop.className "flex-1"
-                prop.style [
-                    // style.width 200
-                    style.height 400
-                ]
+                prop.className "flex flex-row bg-gray-200 p-4"
                 prop.children [
-                    ReactEditor.editor [
-                        editor.options options
-                        editor.value "You can type here, but it won't do anything.\nBelow you can see a 3D model of 1LOL."
+                    Html.input [
+                        prop.value model.PdbIdInput
+                        prop.onChange (fun (s : string) -> s |> ChangePdbIdInput |> dispatch)
+                    ]
+                    Html.button [
+                        prop.className "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2"
+                        prop.onClick (fun _ -> SetPdbId |> dispatch)
+                        prop.children [ Html.text "Click to retrieve raw PDB source by ID" ]
+                    ]
+                    Html.button [
+                        prop.className "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2"
+                        prop.onClick (fun _ -> SetRawPdbText model.EditorValue |> dispatch)
+                        prop.children [ Html.text "Click to send editor value to viewer" ]
                     ]
                 ]
             ]
             Html.div [
-                prop.className "flex-1"
-                prop.style [
-                    // style.width 200
-                    style.height 400
-                ]
+                prop.className "flex flex-row h-full w-full"
                 prop.children [
-                    Molstar.molstar [ molstar.pdbId "1LOL" ]
+                    Html.div [
+                        prop.style [
+                            style.width (length.perc 50)
+                            style.height (length.perc 100)
+                        ]
+                        prop.children [
+                            ReactEditor.editor [
+                                editor.options options
+                                editor.value (model.EditorValue)
+                                editor.onChange (fun (s : string) -> s |> ChangeEditorValue |> dispatch)
+                            ]
+                        ]
+                    ]
+                    Html.div [
+                        prop.style [
+                            style.width (length.perc 50)
+                            style.height (length.perc 100)
+                        ]
+                        prop.children [
+                            Molstar.molstar [ molstar.rawPdbText model.RawPdbText ]
+                        ]
+                    ]
                 ]
             ]
         ]

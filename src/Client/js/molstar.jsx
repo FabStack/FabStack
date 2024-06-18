@@ -16,7 +16,7 @@ import { CameraHelperParams } from "molstar/lib/mol-canvas3d/helper/camera-helpe
 
 const Molstar = props => {
 
-    const { useInterface, pdbId, url, file, dimensions, className, showControls, showAxes } = props;
+    const { useInterface, pdbId, url, file, rawPdbText, dimensions, className, showControls, showAxes } = props;
     const parentRef = useRef(null);
     const canvasRef = useRef(null);
     const plugin = useRef(null);
@@ -53,9 +53,9 @@ const Molstar = props => {
     useEffect(() => {
         if (!initialized) return;
         (async() => {
-            await loadStructure(pdbId, url, file, plugin.current);
+            await loadStructure(pdbId, url, file, rawPdbText, plugin.current);
         })();
-    }, [pdbId, url, file])
+    }, [pdbId, url, file, rawPdbText])
 
     useEffect(() => {
         if (plugin.current) {
@@ -71,20 +71,27 @@ const Molstar = props => {
         }
     }, [showAxes]) 
 
-    const loadStructure = async (pdbId, url, file, plugin) => {
+    const loadStructure = async (pdbId, url, file, rawPdbText, plugin) => {
         if (plugin) {
             plugin.clear();
             if (file) {
                 const data = await plugin.builders.data.rawData({
-                data: file.filestring
+                    data: file.filestring
                 });
                 const traj = await plugin.builders.structure.parseTrajectory(data, file.type);
+                await plugin.builders.structure.hierarchy.applyPreset(traj, "default");
+            } else if (rawPdbText) { // Handling raw PDB text
+                const data = await plugin.builders.data.rawData({
+                    data: rawPdbText
+                });
+                // Assuming the format is CIF format
+                const traj = await plugin.builders.structure.parseTrajectory(data, "mmcif");
                 await plugin.builders.structure.hierarchy.applyPreset(traj, "default");
             } else {
                 const structureUrl = url ? url : pdbId ? `https://files.rcsb.org/view/${pdbId}.cif` : null;
                 if (!structureUrl) return;
                 const data = await plugin.builders.data.download(
-                { url: structureUrl }, {state: {isGhost: true}}
+                    { url: structureUrl }, {state: {isGhost: true}}
                 );
                 let extension = structureUrl.split(".").pop().replace("cif", "mmcif");
                 if (extension.includes("?"))
@@ -127,6 +134,7 @@ Molstar.propTypes = {
     pdbId: PropTypes.string,
     url: PropTypes.string,
     file: PropTypes.object,
+    rawPdbText: PropTypes.string,
     dimensions: PropTypes.array,
     showControls: PropTypes.bool,
     showAxes: PropTypes.bool,
@@ -138,6 +146,7 @@ Molstar.defaultProps = {
     pdbId: "",
     url: "",
     file: null,
+    rawPdbText: "",
     dimensions: null,
     showControls: true,
     showAxes: true,

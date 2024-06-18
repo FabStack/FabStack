@@ -26,6 +26,7 @@ Target.create "Bundle" (fun _ ->
     [
         "server", dotnet [ "publish"; "-c"; "Release"; "-o"; deployPath ] serverPath
         "client", dotnet [ "fable"; "-o"; "output"; "-s"; "--run"; "npx"; "vite"; "build" ] clientPath
+        // "client", dotnet [ "fable"; "-o"; "output"; "-s"; "--run"; "npm"; "run";  "build" ] clientPath 
     ]
     |> runParallel)
 
