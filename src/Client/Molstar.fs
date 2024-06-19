@@ -3,8 +3,6 @@ module Feliz.Molstar
 open Fable.Core
 open Fable.Core.JsInterop
 open Feliz
-open Browser.Types
-open Browser
 
 [<Erase>]
 type molstar =

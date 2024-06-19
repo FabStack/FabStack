@@ -1,19 +1,11 @@
 module Index
 
-open Fable.Remoting.Client
-open Shared
-
+open Elmish
 open Fable.Core
 open Fable.Core.JsInterop
-open Browser.Types
-open Browser
-open Elmish
-open Thoth.Json
-
 open Feliz
 open Feliz.ReactEditor
 open Feliz.Molstar
-
 open Fetch
 
 let fetchContent pdbId =
@@ -25,57 +17,26 @@ let fetchContent pdbId =
 
 type Model = 
     { 
-        Todos: Todo list
-        Input: string 
         PdbIdInput: string
         EditorValue: string
         RawPdbText: string
     }
 
 type Msg =
-    | GotTodos of Todo list
-    | SetInput of string
-    | AddTodo
-    | AddedTodo of Todo
     | ChangeEditorValue of string
     | ChangePdbIdInput of string
     | SetPdbId
     | FetchedContent of string
     | SetRawPdbText of string
 
-let todosApi =
-    Remoting.createApi ()
-    |> Remoting.withRouteBuilder Route.builder
-    |> Remoting.buildProxy<ITodosApi>
-
-let init () =
-    let model = 
-        { 
-            Todos = [] 
-            Input = ""
-            EditorValue = "" 
-            PdbIdInput = "1LOL"
-            RawPdbText = ""
-        }
-    let cmd = Cmd.OfAsync.perform todosApi.getTodos () GotTodos
-    model, cmd
+let init () = { EditorValue = ""; PdbIdInput = "1LOL"; RawPdbText = "" }, Cmd.none
 
 let update msg model =
     match msg with
-    | GotTodos todos -> { model with Todos = todos }, Cmd.none
-    | SetInput value -> { model with Input = value }, Cmd.none
-    | AddTodo ->
-        let todo = Todo.create model.Input
-        let cmd = Cmd.OfAsync.perform todosApi.addTodo todo AddedTodo
-        { model with Input = "" }, cmd
-    | AddedTodo todo ->
-        { model with Todos = model.Todos @ [ todo ] }, Cmd.none
     | ChangeEditorValue s -> { model with EditorValue = s }, Cmd.none
     | ChangePdbIdInput s -> { model with PdbIdInput = s }, Cmd.none
     | FetchedContent s -> { model with EditorValue = s }, Cmd.none
-    | SetPdbId -> 
-        let cmd = Cmd.OfAsync.perform fetchContent model.PdbIdInput FetchedContent
-        model, cmd
+    | SetPdbId -> model, Cmd.OfAsync.perform fetchContent model.PdbIdInput FetchedContent
     | SetRawPdbText s -> { model with RawPdbText = s }, Cmd.none
 
 let view model dispatch =
